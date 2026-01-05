@@ -26,11 +26,7 @@ jobs:
             ${{ runner.os }}-maven-
 
       - name: Run tests with JaCoCo (com threshold)
-        run: |
-          mvn clean test jacoco:report jacoco:check
-        env:
-          jacoco.min.line.coverage: 0.95
-          jacoco.min.branch.coverage: 0.90
+        run: mvn clean verify
 
       - name: Run PIT Mutation Coverage
         id: pitest

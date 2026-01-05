@@ -8,16 +8,6 @@ on:
 jobs:
   mutation:
     runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo:latest
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongosh --eval 'db.runCommand(\"ping\")'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 23
@@ -35,44 +25,62 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Compile and test
-        run: mvn clean compile test-compile
-
-      - name: Verify tests pass
-        run: mvn test
+      - name: Run tests with JaCoCo (com threshold)
+        run: |
+          mvn clean test jacoco:report jacoco:check
         env:
-          SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/testdb
+          jacoco.min.line.coverage: 0.95
+          jacoco.min.branch.coverage: 0.90
 
       - name: Run PIT Mutation Coverage
-        run: mvn org.pitest:pitest-maven:mutationCoverage -DwithHistory
+        id: pitest
+        run: |
+          mvn org.pitest:pitest-maven:mutationCoverage \
+          -DwithHistory \
+          -DoutputFormats=XML \
+          -DreportsDirectory=target/pit-reports
 
-      - name: Create mutation badge
+      - name: Extract mutation coverage from XML
+        id: extract-mutation
         run: |
           MUTATION_FILE=$(find target/pit-reports -name "mutations.xml" | head -n1)
+          
           if [ -f "$MUTATION_FILE" ]; then
-            MUTATION=$(grep -oP '(?<=<mutationCoverage>)[0-9]+(?=%</mutationCoverage>)' "$MUTATION_FILE" | head -n1)
-            echo "mutation=${MUTATION}" >> $GITHUB_ENV
+            MUTATION=$(grep -oP 'mutationCoverage="\K[0-9.]+' "$MUTATION_FILE" | head -n1)
+          
+            MUTATION_PERCENT=$(echo "scale=0; $MUTATION * 100 / 1" | bc)
+          
+            echo "Mutation coverage: ${MUTATION_PERCENT}%"
+            echo "mutation=${MUTATION_PERCENT}" >> $GITHUB_ENV
+            echo "MUTATION_PERCENT=${MUTATION_PERCENT}" >> $GITHUB_OUTPUT
           else
+            echo "Mutation file not found!"
             echo "mutation=0" >> $GITHUB_ENV
+            echo "MUTATION_PERCENT=0" >> $GITHUB_OUTPUT
           fi
 
-      - name: Generate badge
-        uses: emibcn/badge-action@v2
-        with:
-          label: mutation
-          status: ${{ env.mutation }}%
-          color: ${{ env.mutation >= 80 && 'brightgreen' || (env.mutation >= 60 && 'yellow' || 'red') }}
-          path: pit-mutation-badge.svg
-
-      - name: Upload mutation report
-        uses: actions/upload-artifact@v4
-        with:
-          name: pitest-report
-          path: target/pit-reports/
-
-      - name: Check mutation coverage
+      - name: Check mutation coverage threshold
         run: |
-          if [ "${MUTATION}" -lt 90 ]; then
+          echo "Current mutation coverage: ${MUTATION_PERCENT}%"
+          echo "Minimum required: 90%"
+          
+          if [ "${MUTATION_PERCENT}" -lt 90 ]; then
             echo "Mutation coverage below 90%! Failing."
             exit 1
+          else
+            echo "Mutation coverage acceptable"
           fi
+
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pitest-mutation-report
+          path: target/pit-reports/
+
+      - name: Upload JaCoCo report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-report
+          path: target/site/jacoco/

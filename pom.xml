@@ -156,6 +156,7 @@
 						<exclude>**/controllers/responses/*</exclude>
 						<exclude>**/MovieRandomizerApplication.class</exclude>
 					</excludes>
+					<outputDirectory>${project.build.directory}/jacoco</outputDirectory>
 				</configuration>
 			</plugin>
 			<plugin>

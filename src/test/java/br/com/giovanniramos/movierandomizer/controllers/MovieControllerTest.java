@@ -6,23 +6,27 @@ import br.com.giovanniramos.movierandomizer.enums.MovieTypeEnum;
 import br.com.giovanniramos.movierandomizer.exceptions.BadRequestException;
 import br.com.giovanniramos.movierandomizer.exceptions.ConflictException;
 import br.com.giovanniramos.movierandomizer.exceptions.NotFoundException;
+import br.com.giovanniramos.movierandomizer.handlers.GlobalExceptionHandler;
 import br.com.giovanniramos.movierandomizer.services.MovieService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalTime;
 import java.util.HashSet;
@@ -45,18 +49,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class MovieControllerTest {
     private static final String BASE_URL = "/v1/movies";
     private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-    @Autowired
+    @Mock
+    private MovieService movieService;
+
+    @InjectMocks
+    private MovieController movieController;
+
     private MockMvc mockMvc;
 
-    @MockitoBean
-    private MovieService movieService;
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(movieController)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+    }
 
     @Test
     @SneakyThrows
@@ -283,8 +297,7 @@ class MovieControllerTest {
     }
 
     @Test
-    @SneakyThrows
-    void shouldShowMovieList() {
+    void shouldShowMovieList() throws Exception {
         when(movieService.showMovieList(any(), any()))
                 .thenReturn(new PageImpl<>(List.of(movieModelMock()), PageRequest.of(0, 10), 1));
 

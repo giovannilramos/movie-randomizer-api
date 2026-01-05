@@ -2,19 +2,23 @@ package br.com.giovanniramos.movierandomizer.controllers;
 
 import br.com.giovanniramos.movierandomizer.controllers.requests.GenreCreateRequest;
 import br.com.giovanniramos.movierandomizer.exceptions.ConflictException;
+import br.com.giovanniramos.movierandomizer.handlers.GlobalExceptionHandler;
 import br.com.giovanniramos.movierandomizer.services.GenreService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -28,17 +32,27 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)
+@ExtendWith(MockitoExtension.class)
 class GenreControllerTest {
     private static final String BASE_URL = "/v1/genres";
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    @Autowired
+    @Mock
+    private GenreService genreService;
+
+    @InjectMocks
+    private GenreController genreController;
+
     private MockMvc mockMvc;
 
-    @MockitoBean
-    private GenreService genreService;
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(genreController)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
+    }
 
     private static Stream<Arguments> genreRequestParams() {
         return Stream.of(

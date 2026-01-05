@@ -8,6 +8,16 @@ on:
 jobs:
   mutation:
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 23
@@ -30,6 +40,8 @@ jobs:
 
       - name: Verify tests pass
         run: mvn test
+        env:
+          SPRING_DATA_MONGODB_URI: mongodb://localhost:27017/testdb
 
       - name: Run PIT Mutation Coverage
         run: mvn org.pitest:pitest-maven:mutationCoverage -DwithHistory

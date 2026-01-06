@@ -25,6 +25,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
+      - name: Build Project
+        run: mvn clean install
+
       - name: Generate JaCoCo Badges for Module Application
         id: jacoco
         uses: cicirello/jacoco-badge-generator@v2

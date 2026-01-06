@@ -7,15 +7,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.Set;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MovieDrawUseCase {
-    private static final Random RANDOM = new Random();
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final GetMovieDetailsUseCase getMovieDetailsUseCase;
     private final LastMovieDrawRepository lastMovieDrawRepository;

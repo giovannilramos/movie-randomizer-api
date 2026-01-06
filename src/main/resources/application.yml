@@ -25,3 +25,9 @@ minio:
   secretKey: ${MINIO_SECRET_KEY:admin123}
   endpoint: ${MINIO_ENDPOINT:http://34.201.120.115:9000}
   bucket: movie-covers
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: [ "prometheus" ]

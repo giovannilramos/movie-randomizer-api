@@ -32,7 +32,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(registry -> registry
                         .requestMatchers(HttpMethod.POST, "/v1/login")
                         .permitAll()
-                        .requestMatchers("/", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**")
+                        .requestMatchers("/", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/actuator", "/actuator/**")
                         .permitAll()
                         .anyRequest().authenticated()
                 )

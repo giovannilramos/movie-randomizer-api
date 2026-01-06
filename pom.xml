@@ -31,6 +31,8 @@
 		<org.mapstruct.version>1.6.3</org.mapstruct.version>
 		<sonar.organization>giovannilramos</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+		<jacoco.line.minimum>0.95</jacoco.line.minimum>
+		<jacoco.branch.minimum>0.95</jacoco.branch.minimum>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -142,6 +144,9 @@
 						<goals>
 							<goal>report</goal>
 						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/jacoco</outputDirectory>
+						</configuration>
 					</execution>
 				</executions>
 				<configuration>
@@ -156,7 +161,24 @@
 						<exclude>**/controllers/responses/*</exclude>
 						<exclude>**/MovieRandomizerApplication.class</exclude>
 					</excludes>
-					<outputDirectory>${project.build.directory}/jacoco</outputDirectory>
+					<rules>
+						<rule>
+							<element>BUNDLE</element>
+							<limits>
+								<limit>
+									<counter>LINE</counter>
+									<value>COVEREDRATIO</value>
+									<minimum>${jacoco.line.minimum}</minimum> <!-- FALHA se < 80% -->
+								</limit>
+								<limit>
+									<counter>BRANCH</counter>
+									<value>COVEREDRATIO</value>
+									<minimum>${jacoco.branch.minimum}</minimum> <!-- FALHA se < 70% -->
+								</limit>
+							</limits>
+						</rule>
+					</rules>
+					<haltOnFailure>true</haltOnFailure>
 				</configuration>
 			</plugin>
 			<plugin>

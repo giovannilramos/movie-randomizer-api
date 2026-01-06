@@ -25,8 +25,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Run tests with JaCoCo (com threshold)
-        run: mvn clean verify
+      - name: Run tests with JaCoCo
+        run: |
+          mvn clean verify \
+            -Djacoco.line.minimum=0.80 \
+            -Djacoco.branch.minimum=0.70
 
       - name: Run PIT Mutation Coverage
         id: pitest

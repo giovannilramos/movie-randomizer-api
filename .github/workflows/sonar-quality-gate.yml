@@ -35,5 +35,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
           -Dsonar.projectKey=giovannilramos_movie-randomizer-api \
-          -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco/jacoco.xml
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/jacoco/jacoco.xml \
+          -Dsonar.branch.name=main
 

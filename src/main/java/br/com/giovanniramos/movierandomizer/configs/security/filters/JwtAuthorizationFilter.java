@@ -13,7 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 @Component
 @RequiredArgsConstructor
@@ -28,14 +28,11 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                                     @NonNull final FilterChain filterChain) {
         try {
             final var username = tokenService.getSubject(request);
-            if (isNull(username)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
+            if (nonNull(username)) {
+                final var userDetails = userDetailsService.loadUserByUsername(username);
+                SecurityContextHolder.getContext().setAuthentication(
+                        new UsernamePasswordAuthenticationToken(username, null, userDetails.getAuthorities()));
             }
-
-            final var userDetails = userDetailsService.loadUserByUsername(username);
-            SecurityContextHolder.getContext().setAuthentication(
-                    new UsernamePasswordAuthenticationToken(username, null, userDetails.getAuthorities()));
 
             filterChain.doFilter(request, response);
         } catch (final Exception _) {

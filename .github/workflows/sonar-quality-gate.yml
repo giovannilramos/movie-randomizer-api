@@ -42,6 +42,8 @@ jobs:
           else
             DETAILS_URL="https://sonarcloud.io/api/qualitygates/project_status?projectKey=giovannilramos_movie-randomizer-api&branch=main"          
             QUALITY_GATE_STATUS=$(curl -s "https://sonarcloud.io/api/qualitygates/project_status?projectKey=giovannilramos_movie-randomizer-api&branch=main" | jq -r '.projectStatus.status')
+          fi
+
           if [ "$QUALITY_GATE_STATUS" != "OK" ]; then
             echo "Quality Gate did not pass. Exiting with failure."
             exit 1
